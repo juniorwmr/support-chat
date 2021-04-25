@@ -1,39 +1,66 @@
 import { Request, Response } from 'express';
-import { getCustomRepository } from 'typeorm';
-import { SettingsRepository } from '../repositories/SettingsRepository';
+import { SettingsService } from '../services/SettingsService';
 
 export default {
-  async index(request: Request, response: Response) {
+  async index(request: Request, response: Response): Promise<Response> {
     try {
-      const settingsRepository = getCustomRepository(SettingsRepository);
-      const settings = await settingsRepository.find();
-      response.status(200).json(settings);
+      const settingsService = new SettingsService();
+      const settings = await settingsService.index();
+
+      return response.status(200).json(settings);
     } catch (error) {
-      response.status(400).json({
-        error,
+      return response.status(400).json({
+        message: error.message,
       });
     }
   },
 
-  async create(request: Request, response: Response) {
+  async create(request: Request, response: Response): Promise<Response> {
     try {
       const { username, chat } = request.body;
 
-      const settingsRepository = getCustomRepository(SettingsRepository);
+      const settingsService = new SettingsService();
 
-      const settings = settingsRepository.create({
-        username,
-        chat,
-      });
+      const settings = await settingsService.create({ username, chat });
 
-      await settingsRepository.save(settings);
-
-      response.status(201).json({
-        response: 'Settings created with success.',
-      });
+      return response.status(200).json(settings);
     } catch (error) {
-      response.status(400).json({
-        error,
+      return response.status(400).json(error.message);
+    }
+  },
+
+  async findByUsername(
+    request: Request,
+    response: Response
+  ): Promise<Response> {
+    try {
+      const { username } = request.params;
+
+      const settingsService = new SettingsService();
+
+      const settings = await settingsService.findByUsername(username);
+
+      return response.status(200).json(settings);
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+  },
+
+  async update(request: Request, response: Response): Promise<Response> {
+    try {
+      const { username } = request.params;
+      const { chat } = request.body;
+
+      const settingsService = new SettingsService();
+
+      await settingsService.update({ username, chat });
+
+      return response.status(200).json(chat);
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
       });
     }
   },
